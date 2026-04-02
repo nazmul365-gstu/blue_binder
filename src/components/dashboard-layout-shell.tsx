@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { UserAvatar, useUserProfile } from "@/components/user-profile-provider";
 
 type NavItem = {
   label: string;
@@ -45,14 +47,6 @@ function CloseIcon() {
     <svg className="h-4 w-4 text-[#8d93a5]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 5l10 10M15 5 5 15" />
     </svg>
-  );
-}
-
-function UserAvatar() {
-  return (
-    <div className="relative h-9 w-9 overflow-hidden rounded-full ring-1 ring-white/70">
-      <Image src="/profile.png.jpg" alt="Profile" fill className="object-cover" sizes="36px" priority={false} />
-    </div>
   );
 }
 
@@ -111,6 +105,17 @@ function LogoutIcon() {
   );
 }
 
+function SpinnerIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 animate-spin text-[#ff5b79]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" />
+    </svg>
+  );
+}
+
+const AUTH_KEY = "dashboard-is-authenticated";
+
 const relatedBySection: Record<string, RelatedItem[]> = {
   overview: [],
   identity: [],
@@ -132,11 +137,20 @@ function getSectionFromPath(pathname: string): string {
 }
 
 export default function DashboardLayoutShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
   const currentSection = getSectionFromPath(pathname);
   const related = relatedBySection[currentSection];
+  const { profile } = useUserProfile();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.localStorage.getItem(AUTH_KEY) !== "true") {
+      router.replace("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -155,13 +169,21 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
     setIsUserMenuOpen(false);
   }, [pathname]);
 
+  function handleLogout() {
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      window.localStorage.removeItem(AUTH_KEY);
+      router.replace("/login");
+    }, 1500);
+  }
+
   return (
     <div className="h-screen w-screen bg-[var(--page-bg)]">
       <main className="flex h-full w-full overflow-hidden bg-[var(--surface)]">
         <aside className="hidden w-[148px] shrink-0 flex-col border-r border-[#254071] bg-[var(--sidebar)] pt-2 text-white sm:flex">
           <div className="px-2.5">
-            <div className="mb-6 ml-auto mr-auto grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white ring-2 ring-[#2f4f96]">
-              <Image src="/logo.png.png" alt="Logo" width={48} height={48} className="h-full w-full object-cover" priority={false} />
+            <div className="mb-6 ml-auto mr-auto grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-white ring-2 ring-[#2f4f96]">
+              <Image src="/logo.png.png" alt="Logo" width={56} height={56} className="h-full w-full object-cover" priority={false} />
             </div>
 
             <p className="mb-2 text-[7px] uppercase tracking-[0.12em] text-white/65">MAIN MENU</p>
@@ -193,9 +215,9 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
           </div>
 
           <div className="mt-auto flex h-[34px] items-center justify-center border-t border-[#385582] bg-[#0a234f] px-2.5">
-            <button className="flex items-center gap-1.5 text-[10px] font-medium leading-none text-[#ff5b79] transition hover:text-[#ff8198]">
-              <LogoutIcon />
-              <span>Logout</span>
+            <button onClick={handleLogout} disabled={isLoggingOut} className="flex items-center gap-1.5 text-[10px] font-medium leading-none text-[#ff5b79] transition hover:text-[#ff8198] disabled:opacity-60 disabled:cursor-not-allowed">
+              {isLoggingOut ? <SpinnerIcon /> : <LogoutIcon />}
+              <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
             </button>
           </div>
         </aside>
@@ -220,10 +242,10 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
                 >
                   <div className="hidden text-right leading-tight sm:block">
-                    <div className="text-[14px] font-medium text-[#28344b]">Dr. Jon Kabir</div>
+                    <div className="text-[14px] font-medium text-[#28344b]">{profile.fullName}</div>
                     <div className="text-[10px] text-[#707b8f]">Admin</div>
                   </div>
-                  <UserAvatar />
+                  <UserAvatar className="h-9 w-9" />
                   <ChevronDownIcon />
                 </button>
 
@@ -232,10 +254,10 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <div className="scale-[0.88]">
-                          <UserAvatar />
+                          <UserAvatar className="h-9 w-9" />
                         </div>
                         <div className="leading-tight">
-                          <p className="text-[11px] font-medium text-[#263049]">Dr. Jon Kabir</p>
+                          <p className="text-[11px] font-medium text-[#263049]">{profile.fullName}</p>
                           <span className="mt-1 inline-flex rounded-full bg-[#dbe3ef] px-2 py-[2px] text-[8px] font-medium text-[#5b667d]">Admin</span>
                         </div>
                       </div>
@@ -263,11 +285,14 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
 
                     <button
                       type="button"
-                      className="mt-1.5 h-[30px] w-full rounded-[3px] bg-[#4237b0] text-[12px] font-medium text-white transition hover:bg-[#4f44c0]"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="mt-1.5 h-[30px] w-full rounded-[3px] bg-[#4237b0] text-[12px] font-medium text-white transition hover:bg-[#4f44c0] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Log out
+                      {isLoggingOut && <SpinnerIcon />}
+                      {isLoggingOut ? "Logging out..." : "Log out"}
                     </button>
-                </div>
+                  </div>
                 )}
               </div>
             </div>

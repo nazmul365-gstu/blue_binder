@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 function ProfileIcon() {
@@ -25,14 +24,6 @@ function SaveIcon() {
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h11l3 3v13H5V4Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M8 4v5h8V4" />
     </svg>
-  );
-}
-
-function UserAvatar() {
-  return (
-    <div className="relative h-12 w-12 overflow-hidden rounded-full">
-      <Image src="/profile.png.jpg" alt="Profile" fill className="object-cover" sizes="48px" priority={false} />
-    </div>
   );
 }
 
