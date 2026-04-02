@@ -13,6 +13,33 @@ type RelatedItem = {
   href: string;
 };
 
+function BellIcon() {
+  return (
+    <svg className="h-4 w-4 text-[#69758d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 19a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 text-[#7c8598]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m5 7 5 5 5-5" />
+    </svg>
+  );
+}
+
+function UserAvatar() {
+  return (
+    <div className="relative h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(135deg,#c7d1df_0%,#9fb0c6_42%,#7186a3_100%)] ring-1 ring-white/70">
+      <div className="absolute left-[10px] top-[6px] h-[8px] w-[8px] rounded-full bg-[#f4d2b0]" />
+      <div className="absolute left-[7px] top-[11px] h-[11px] w-[14px] rounded-t-full bg-[#274766]" />
+      <div className="absolute left-[11px] top-[15px] h-[8px] w-[8px] rounded-full bg-[#f4d2b0]" />
+    </div>
+  );
+}
+
 const navItems: NavItem[] = [
   { label: "Overview", href: "/overview" },
   { label: "Identity", href: "/identity" },
@@ -48,6 +75,16 @@ function MenuIcon({ type }: { type: "overview" | "identity" | "database" }) {
   );
 }
 
+function LogoutIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 text-[#ff5b79]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16l4-4-4-4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 12H8" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5v10h3" />
+    </svg>
+  );
+}
+
 const relatedBySection: Record<string, RelatedItem[]> = {
   overview: [],
   identity: [],
@@ -55,7 +92,7 @@ const relatedBySection: Record<string, RelatedItem[]> = {
 };
 
 const titleBySection: Record<string, string> = {
-  overview: "Overview",
+  overview: "Dashboard Overview",
   identity: "Identity",
   database: "Database",
 };
@@ -90,9 +127,7 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-2 rounded-[3px] px-2 py-1.5 transition ${
-                      active
-                        ? "bg-[#2a428d] text-white"
-                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                      active ? "bg-[#2a428d] text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <span className="text-white/90"><MenuIcon type={iconType} /></span>
@@ -103,26 +138,51 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
             </nav>
           </div>
 
-          <div className="mt-auto border-t border-[#2a4475] px-2 py-3">
-            <button className="text-[9px] font-medium text-[#ff5378]">[&gt; Logout]</button>
+          <div className="mt-auto flex h-[34px] items-center justify-center border-t border-[#385582] bg-[#0a234f] px-2.5">
+            <button className="flex items-center gap-1.5 text-[10px] font-medium leading-none text-[#ff5b79] transition hover:text-[#ff8198]">
+              <LogoutIcon />
+              <span>Logout</span>
+            </button>
           </div>
         </aside>
 
         <section className="flex flex-1 flex-col bg-[var(--surface)]">
-          <header className="flex items-center justify-between gap-3 border-b border-[#d8deea] px-3 py-2 sm:px-5">
-            <div>
-              <h1 className="text-[18px] font-semibold text-[#11172b]">{titleBySection[currentSection]}</h1>
-              <p className="text-[10px] text-[#8c93a6]">
+          <header className="border-b border-[#d6dce8] bg-[#eaedf2]">
+            <div className="flex items-center justify-end gap-3 px-3 pb-1 pt-2 sm:px-5">
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-transparent text-[#6f7b91] transition hover:bg-white/65"
+              >
+                <BellIcon />
+                <span className="absolute right-[6px] top-[6px] h-2 w-2 rounded-full border-2 border-[#eaedf2] bg-[#34c759]" />
+              </button>
+
+              <button
+                type="button"
+                className="flex shrink-0 items-center gap-2 rounded-full px-1.5 py-1 text-left text-[#1a2438] transition hover:bg-white/60"
+                aria-label="User menu"
+              >
+                <div className="hidden text-right leading-tight sm:block">
+                  <div className="text-[14px] font-medium text-[#28344b]">Dr. Jon Kabir</div>
+                  <div className="text-[10px] text-[#707b8f]">Admin</div>
+                </div>
+                <UserAvatar />
+                <ChevronDownIcon />
+              </button>
+            </div>
+
+            <div className="px-3 pb-3 pt-1.5 sm:px-5 sm:pb-4">
+              <h1 className="text-[18px] font-semibold leading-tight text-[#11172b] sm:text-[19px]">
+                {titleBySection[currentSection]}
+              </h1>
+              <p className="mt-1 text-[10px] text-[#8c93a6]">
                 {currentSection === "overview"
                   ? "Welcome back, here is your fleet overview."
                   : currentSection === "identity"
                     ? "Upload aircraft images for AI-powered analysis and registration detection."
                     : "Verified aircraft records from FAA database lookups."}
               </p>
-            </div>
-            <div className="flex items-center gap-2 text-[10px] text-[#30374b]">
-              <span>Dr. Jon Kabir</span>
-              <span className="grid h-5 w-5 place-items-center rounded-full bg-[#6a8ba7] text-[10px] text-white">J</span>
             </div>
           </header>
 
