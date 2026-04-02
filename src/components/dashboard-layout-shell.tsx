@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 type NavItem = {
   label: string;
@@ -30,12 +32,26 @@ function ChevronDownIcon() {
   );
 }
 
+function ChevronRightIcon() {
+  return (
+    <svg className="h-4 w-4 text-[#7b8090]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m7 5 5 5-5 5" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg className="h-4 w-4 text-[#8d93a5]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 5l10 10M15 5 5 15" />
+    </svg>
+  );
+}
+
 function UserAvatar() {
   return (
-    <div className="relative h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(135deg,#c7d1df_0%,#9fb0c6_42%,#7186a3_100%)] ring-1 ring-white/70">
-      <div className="absolute left-[10px] top-[6px] h-[8px] w-[8px] rounded-full bg-[#f4d2b0]" />
-      <div className="absolute left-[7px] top-[11px] h-[11px] w-[14px] rounded-t-full bg-[#274766]" />
-      <div className="absolute left-[11px] top-[15px] h-[8px] w-[8px] rounded-full bg-[#f4d2b0]" />
+    <div className="relative h-9 w-9 overflow-hidden rounded-full ring-1 ring-white/70">
+      <Image src="/profile.png.jpg" alt="Profile" fill className="object-cover" sizes="36px" priority={false} />
     </div>
   );
 }
@@ -44,9 +60,10 @@ const navItems: NavItem[] = [
   { label: "Overview", href: "/overview" },
   { label: "Identity", href: "/identity" },
   { label: "Database", href: "/database" },
+  { label: "Settings", href: "/settings" },
 ];
 
-function MenuIcon({ type }: { type: "overview" | "identity" | "database" }) {
+function MenuIcon({ type }: { type: "overview" | "identity" | "database" | "settings" }) {
   if (type === "overview") {
     return (
       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
@@ -62,6 +79,15 @@ function MenuIcon({ type }: { type: "overview" | "identity" | "database" }) {
     return (
       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V5m0 0l-4 4m4-4l4 4M4 15.5V18a2 2 0 002 2h12a2 2 0 002-2v-2.5" />
+      </svg>
+    );
+  }
+
+  if (type === "settings") {
+    return (
+      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1 1 0 0 1-1 1h-1.4a1 1 0 0 1-1-1v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1 1 0 0 1-1.4 0l-1-1a1 1 0 0 1 0-1.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a1 1 0 0 1-1-1v-1.4a1 1 0 0 1 1-1h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 1.4 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a1 1 0 0 1 1-1h1.4a1 1 0 0 1 1 1v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1 0 1.4l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a1 1 0 0 1 1 1v1.4a1 1 0 0 1-1 1h-.2a1 1 0 0 0-.9.6Z" />
       </svg>
     );
   }
@@ -89,12 +115,14 @@ const relatedBySection: Record<string, RelatedItem[]> = {
   overview: [],
   identity: [],
   database: [],
+  settings: [],
 };
 
 const titleBySection: Record<string, string> = {
   overview: "Dashboard Overview",
   identity: "Identity",
   database: "Database",
+  settings: "Settings",
 };
 
 function getSectionFromPath(pathname: string): string {
@@ -107,21 +135,47 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
   const pathname = usePathname();
   const currentSection = getSectionFromPath(pathname);
   const related = relatedBySection[currentSection];
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [pathname]);
 
   return (
     <div className="h-screen w-screen bg-[var(--page-bg)]">
       <main className="flex h-full w-full overflow-hidden bg-[var(--surface)]">
         <aside className="hidden w-[148px] shrink-0 flex-col border-r border-[#254071] bg-[var(--sidebar)] pt-2 text-white sm:flex">
           <div className="px-2.5">
-            <div className="mb-6 ml-auto mr-auto grid h-12 w-12 place-items-center rounded-full bg-white ring-2 ring-[#2f4f96]">
-              <span className="text-[10px] font-bold text-[#203e8d]">LOGO</span>
+            <div className="mb-6 ml-auto mr-auto grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-white ring-2 ring-[#2f4f96]">
+              <Image src="/logo.png.png" alt="Logo" width={48} height={48} className="h-full w-full object-cover" priority={false} />
             </div>
 
             <p className="mb-2 text-[7px] uppercase tracking-[0.12em] text-white/65">MAIN MENU</p>
             <nav className="space-y-1 text-[9px] leading-tight">
               {navItems.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                const iconType = item.label === "Overview" ? "overview" : item.label === "Identity" ? "identity" : "database";
+                const iconType =
+                  item.label === "Overview"
+                    ? "overview"
+                    : item.label === "Identity"
+                      ? "identity"
+                      : item.label === "Database"
+                        ? "database"
+                        : "settings";
                 return (
                   <Link
                     key={item.href}
@@ -158,18 +212,64 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
                 <span className="absolute right-[6px] top-[6px] h-2 w-2 rounded-full border-2 border-[#eaedf2] bg-[#34c759]" />
               </button>
 
-              <button
-                type="button"
-                className="flex shrink-0 items-center gap-2 rounded-full px-1.5 py-1 text-left text-[#1a2438] transition hover:bg-white/60"
-                aria-label="User menu"
-              >
-                <div className="hidden text-right leading-tight sm:block">
-                  <div className="text-[14px] font-medium text-[#28344b]">Dr. Jon Kabir</div>
-                  <div className="text-[10px] text-[#707b8f]">Admin</div>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  type="button"
+                  className="flex shrink-0 items-center gap-2 rounded-full px-1.5 py-1 text-left text-[#1a2438] transition hover:bg-white/60"
+                  aria-label="User menu"
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                >
+                  <div className="hidden text-right leading-tight sm:block">
+                    <div className="text-[14px] font-medium text-[#28344b]">Dr. Jon Kabir</div>
+                    <div className="text-[10px] text-[#707b8f]">Admin</div>
+                  </div>
+                  <UserAvatar />
+                  <ChevronDownIcon />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-[calc(100%-39px)] z-40 w-[230px] rounded-md border border-[rgba(199,207,224,0.82)] bg-[rgba(236,239,246,0.42)] p-2.5 shadow-[0_14px_34px_rgba(18,24,42,0.22)] backdrop-blur-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="scale-[0.88]">
+                          <UserAvatar />
+                        </div>
+                        <div className="leading-tight">
+                          <p className="text-[11px] font-medium text-[#263049]">Dr. Jon Kabir</p>
+                          <span className="mt-1 inline-flex rounded-full bg-[#dbe3ef] px-2 py-[2px] text-[8px] font-medium text-[#5b667d]">Admin</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="rounded p-0.5 transition hover:bg-white/70"
+                        aria-label="Close user menu"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <CloseIcon />
+                      </button>
+                    </div>
+
+                    <div className="my-2.5 h-px bg-[#bcc3d2]" />
+
+                    <Link href="/settings" className="flex w-full items-center justify-between py-1.5 text-left text-[12px] text-[#2f3342] transition hover:text-[#171c2d]">
+                      <span>Profile</span>
+                      <ChevronRightIcon />
+                    </Link>
+                    <Link href="/settings" className="flex w-full items-center justify-between py-1.5 text-left text-[12px] text-[#2f3342] transition hover:text-[#171c2d]">
+                      <span>Settings</span>
+                      <ChevronRightIcon />
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="mt-1.5 h-[30px] w-full rounded-[3px] bg-[#4237b0] text-[12px] font-medium text-white transition hover:bg-[#4f44c0]"
+                    >
+                      Log out
+                    </button>
                 </div>
-                <UserAvatar />
-                <ChevronDownIcon />
-              </button>
+                )}
+              </div>
             </div>
 
             <div className="px-3 pb-3 pt-1.5 sm:px-5 sm:pb-4">
@@ -181,7 +281,9 @@ export default function DashboardLayoutShell({ children }: { children: React.Rea
                   ? "Welcome back, here is your fleet overview."
                   : currentSection === "identity"
                     ? "Upload aircraft images for AI-powered analysis and registration detection."
-                    : "Verified aircraft records from FAA database lookups."}
+                    : currentSection === "settings"
+                      ? "Manage your account and application preferences."
+                      : "Verified aircraft records from FAA database lookups."}
               </p>
             </div>
           </header>

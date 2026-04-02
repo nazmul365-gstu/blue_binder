@@ -37,7 +37,7 @@ export default function OverviewPage() {
             ))}
           </div>
 
-          <div className="ml-[34px] mr-3 mt-[-138px] flex h-[138px] items-end justify-between gap-3">
+          <div className="ml-[34px] mr-3 mt-[-146px] flex h-[138px] items-end justify-between gap-3">
             {weeklyData.map((value, index) => (
               <div key={days[index]} className="flex flex-1 items-end justify-center">
                 <div
@@ -48,7 +48,7 @@ export default function OverviewPage() {
             ))}
           </div>
 
-          <div className="ml-[34px] mr-3 mt-2 flex items-center justify-between gap-3">
+          <div className="ml-[34px] mr-3 mt-1 flex items-center justify-between gap-3">
             {days.map((day) => (
               <span key={day} className="flex-1 text-center text-[11px] text-[#6c7690]">
                 {day}
